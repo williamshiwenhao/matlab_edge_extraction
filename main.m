@@ -3,6 +3,18 @@ clear all;
 close all;
 fileName = 'test.bmp';
 img = imread(fileName);
+%%
+rustColor=[70,62,59];
+th = 20;
+mask = zeros(size(img,1), size(img,2));
+dimg = double(img);
+diff(:,:,1) =  dimg(:,:,1)- rustColor(1);
+diff(:,:,2) = dimg(:,:,2) - rustColor(2);
+diff(:,:,3) = dimg(:,:,3) - rustColor(3);
+total = sum(diff.^2,3);
+mask(total < th) = 1;
+figure,imshow(mask);
+
 
 %%
 %High pass enhancement
@@ -30,8 +42,8 @@ newHis(end)=sum(oldHis(highBound+1:end));
 newHis(2:end-1) = oldHis(lowBound:highBound);
 his = histeq(enhance, newHis);
 %his = histeq(his);
-
-
+figure,imshow(his);
+his(mask==1)=255;
 figure,imshow(his);
 
 %%
@@ -79,11 +91,15 @@ figure,imshow(closed);title('close');
 %%
 %take img to 3 parts
 %150-200 200-400 400-500
-head = closed(:,1:199);
+head = closed(:,1:156);
+leftHead = closed(:, 157:199);
 left = closed(:,200:300);
 middle = closed(:,300:400);
-right = closed(:,400:550);
-tail = closed(:,551:end);
+right = closed(:,400:530);
+tail = closed(:,531:end);
+%left head
+line = strel('line', 5,90);
+leftHead = imdilate(leftHead, line);
 %left
 line = strel('line',12,10);
 left = imdilate(left, line);
@@ -95,7 +111,7 @@ line = strel('line',8,-40);
 right = imdilate(right, line);
 
 
-together = [head, left, middle, right, tail];
+together = [head, leftHead, left, middle, right, tail];
 together = bwmorph(together, 'close');
 figure,imshow(together);title('Together');
 %%
@@ -104,3 +120,20 @@ figure,imshow(together);title('Together');
 skel = bwmorph(together, 'skel', inf);
 skel = bwmorph(skel, 'spur',inf);
 figure, imshow(skel);title('skel');
+
+%%
+%
+L = bwlabel(skel);
+num = max(max(L));
+thX = 200;
+thY = 100;
+mins = skel;
+for ii=1:num
+    [y,x] = find(L==ii);
+    diffX = max(x)-min(x);
+    diffY = max(y)-min(y);
+    if (diffX<=thX || diffY<=thY) 
+        mins(y,x)=0;
+    end
+end
+figure,imshow(mins);title('mins');
