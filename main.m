@@ -38,7 +38,7 @@ figure,imshow(his);
 %edge
 canny = edge(his, 'sobel',0.3);
 
-figure,imshow(canny);
+%figure,imshow(canny);
 
 %line
 % f1 = [-1,-1,-1;2,2,2;-1,-1,-1];
@@ -75,7 +75,32 @@ end
 figure,imshow(mins);
 closed = bwmorph(mins, 'close');
 figure,imshow(closed);title('close');
-line = strel('line', 5, -40);
-bw2 = imdilate(closed, line);
-figure,imshow(bw2), title('imdilate with line');
-%figure,imshow(A2);
+
+%%
+%take img to 3 parts
+%150-200 200-400 400-500
+head = closed(:,1:199);
+left = closed(:,200:300);
+middle = closed(:,300:400);
+right = closed(:,400:550);
+tail = closed(:,551:end);
+%left
+line = strel('line',12,10);
+left = imdilate(left, line);
+%middle
+%line = strel('line',10,5);
+%middle = imdilate(middle, line);
+%right
+line = strel('line',8,-40);
+right = imdilate(right, line);
+
+
+together = [head, left, middle, right, tail];
+together = bwmorph(together, 'close');
+figure,imshow(together);title('Together');
+%%
+%
+%skel = bwmorph(together, 'remove');
+skel = bwmorph(together, 'skel', inf);
+skel = bwmorph(skel, 'spur',inf);
+figure, imshow(skel);title('skel');
