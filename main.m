@@ -4,16 +4,13 @@ close all;
 fileName = 'test.bmp';
 img = imread(fileName);
 %%
-rustColor=[70,62,59];
-th = 20;
-mask = zeros(size(img,1), size(img,2));
-dimg = double(img);
-diff(:,:,1) =  dimg(:,:,1)- rustColor(1);
-diff(:,:,2) = dimg(:,:,2) - rustColor(2);
-diff(:,:,3) = dimg(:,:,3) - rustColor(3);
-total = sum(diff.^2,3);
-mask(total < th) = 1;
-figure,imshow(mask);
+%ColorMask
+colorMask = false(size(img,1), size(img,2));
+colorMask = or(colorMask, ColorMask(img, [65, 55, 46], 20));%ÒõÓ°
+%colorMask = or(colorMask, ColorMask(img, [44, 27, 11], 300));%ÌúÐâ
+colorMask = or(colorMask, ColorMask(img, [80, 76 , 67], 40));%ÌúÐâ
+colorMask = or(colorMask, ColorMask(img, [86, 82 , 73], 30));%ÌúÐâ
+colorMask = or(colorMask, ColorMask(img, [60, 60, 60], 30));%×ó²àÌúÐâ
 
 
 %%
@@ -43,12 +40,13 @@ newHis(2:end-1) = oldHis(lowBound:highBound);
 his = histeq(enhance, newHis);
 %his = histeq(his);
 figure,imshow(his);
-his(mask==1)=255;
+his(colorMask==1)=255;
 figure,imshow(his);
 
 %%
 %edge
-canny = edge(his, 'sobel',0.3);
+canny = edge(his, 'sobel',0.35);
+figure, imshow(canny);title('Sobel');
 
 %figure,imshow(canny);
 
@@ -67,14 +65,13 @@ canny = edge(his, 'sobel',0.3);
 % r(r<T)=255;
 % imshow(r)
 
-canny = bwmorph(canny, 'spur');
-canny = bwmorph(canny, 'clean');
+
 
 %Á¬Í¨·ÖÁ¿
 L = bwlabel(canny);
 num = max(max(L));
 thX = 10;
-thY = 10;
+thY = 5;
 mins = canny;
 for ii=1:num
     [x,y] = find(L==ii);
@@ -85,9 +82,11 @@ for ii=1:num
     end
 end
 figure,imshow(mins);
+% mins = bwmorph(mins, 'spur',5);
+%mins = bwmorph(mins, 'clean');
 closed = bwmorph(mins, 'close');
 figure,imshow(closed);title('close');
-
+return 
 %%
 %take img to 3 parts
 %150-200 200-400 400-500
